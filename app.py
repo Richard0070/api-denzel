@@ -47,8 +47,18 @@ def generate_rank_card():
     draw.text((185, 83), f'Level {level} | XP: {xp} / {totalxp}', font=info_font, fill=(255, 255, 255))
     draw.text((185, 115), f'Rank: {rank}', font=info_font, fill=(255, 255, 255))
 
+    progress_percent = (xp / totalxp) * 100
+    progress_length = int(base_image.width * (progress_percent / 100))
+
+    draw.rectangle([(0, base_image.height - 5),
+                    (progress_length, base_image.height)],
+                   fill=(255, 255, 255))
+
     img_byte_array = io.BytesIO()
     base_image.save(img_byte_array, format='PNG')
     img_byte_array.seek(0)
 
     return send_file(img_byte_array, mimetype='image/png')
+
+if __name__ == "__main__":
+    app.run(debug=True)
