@@ -74,8 +74,8 @@ def generate_card():
     if balance > 1000:
         balance = f'{balance / 1000:.1f}k'
 
-    avatar_url = request.args.get('avatar')
-    avatar_image = Image.open(requests.get(avatar_url, stream=True).raw).convert("RGBA").resize((380, 380))
+    avatarurl = request.args.get('avatarurl')
+    avatar_image = Image.open(requests.get(avatarurl, stream=True).raw).convert("RGBA").resize((380, 380))
     mask = Image.new('L', (380, 380), 0)
     draw_mask = ImageDraw.Draw(mask)
     draw_mask.ellipse((0, 0, 380, 380), fill=255)
