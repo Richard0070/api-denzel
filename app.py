@@ -81,17 +81,17 @@ def generate_card():
     draw_mask.ellipse((0, 0, 380, 380), fill=255)
     circular_avatar = ImageOps.fit(avatar_image, mask.size, centering=(0.5, 0.5))
     circular_avatar.putalpha(mask)
-    base_image.paste(circular_avatar, (200, 150), circular_avatar)
+    base_image.paste(circular_avatar, (180, 130), circular_avatar)
 
     draw = ImageDraw.Draw(base_image)
     font = ImageFont.truetype("fonts/book.ttf", 100)
-    draw.text((800, 180), f"Username: {username}", fill="white", font=font)
-    draw.text((800, 360), f"Laddoos: {balance}", fill="white", font=font)
+    draw.text((700, 160), f"Username: {username}", fill="white", font=font)
+    draw.text((700, 330), f"Laddoos: {balance}", fill="white", font=font)
 
     if vip:
         vip_path = "vip.png"
         vip_image = Image.open(vip_path).resize((300, 200))
-        base_image.paste(vip_image, (2000, 220))
+        base_image.paste(vip_image, (1900, 180))
 
     img_byte_array = io.BytesIO()
     base_image.save(img_byte_array, format='PNG')
