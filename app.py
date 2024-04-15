@@ -60,5 +60,45 @@ def generate_rank_card():
 
     return send_file(img_byte_array, mimetype='image/png')
 
+@app.route("/card2")
+def generate_card():
+    username = request.args.get('username')
+    balance = int(request.args.get('balance'))
+    vip = request.args.get('vip', '').lower() == 'true'
+
+    base_image = Image.open('card_base.png')
+
+    if len(username) > 12:
+        username = f'{username[:12]}...'
+
+    if balance > 1000:
+        balance = f'{balance / 1000:.1f}k'
+
+    avatar_url = request.args.get('avatar')
+    avatar_image = Image.open(requests.get(avatar_url, stream=True).raw).convert("RGBA").resize((380, 380))
+    mask = Image.new('L', (380, 380), 0)
+    draw_mask = ImageDraw.Draw(mask)
+    draw_mask.ellipse((0, 0, 380, 380), fill=255)
+    circular_avatar = ImageOps.fit(avatar_image, mask.size, centering=(0.5, 0.5))
+    circular_avatar.putalpha(mask)
+    base_image.paste(circular_avatar, (200, 150), circular_avatar)
+
+    draw = ImageDraw.Draw(base_image)
+    font = ImageFont.truetype("assets/font.ttf", 100)
+    draw.text((800, 180), f"Username: {username}", fill="white", font=font)
+    draw.text((800, 360), f"Laddoos: {balance}", fill="white", font=font)
+
+    if vip:
+        vip_path = "vip.png"
+        vip_image = Image.open(vip_path).resize((300, 200))
+        base_image.paste(vip_image, (2000, 220))
+
+    img_byte_array = io.BytesIO()
+    base_image.save(img_byte_array, format='PNG')
+    img_byte_array.seek(0)
+
+    return send_file(img_byte_array, mimetype='image/png')
+
 if __name__ == "__main__":
     app.run(debug=True)
+    
