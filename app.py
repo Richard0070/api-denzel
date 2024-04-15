@@ -84,7 +84,7 @@ def generate_card():
     base_image.paste(circular_avatar, (200, 150), circular_avatar)
 
     draw = ImageDraw.Draw(base_image)
-    font = ImageFont.truetype("assets/font.ttf", 100)
+    font = ImageFont.truetype("fonts/font.ttf", 100)
     draw.text((800, 180), f"Username: {username}", fill="white", font=font)
     draw.text((800, 360), f"Laddoos: {balance}", fill="white", font=font)
 
