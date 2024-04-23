@@ -9,7 +9,6 @@ import string
 app = Flask(__name__)
 
 BASE_URL = 'https://api-denzel.vercel.app/'
-links_storage = {}
 
 @app.route("/")
 def start():
