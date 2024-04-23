@@ -22,9 +22,9 @@ def mbsa():
 def generate_random_string(length=10):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-@app.route('/generate_link', methods=['POST'])
+@app.route('/generate_link', methods=['GET'])
 def generate_link():
-    link = request.json.get('link')
+    link = request.args.get('link')
     if not link:
         return jsonify({'error': 'Missing link parameter'})
 
@@ -42,7 +42,7 @@ def embed_image(random_string):
     
     embed_code = f"<img src='{link}' alt='Embedded Image'>"
     return embed_code, 200, {'Content-Type': 'text/html'}
-    
+
 @app.route('/card')
 def generate_rank_card():
     name = request.args.get('name')
