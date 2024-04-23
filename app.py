@@ -39,10 +39,18 @@ def embed_image(random_string):
     link = links_storage.get(random_string)
     if not link:
         return jsonify({'error': 'Link not found'})
-    
-    embed_code = f"<img src='{link}' alt='Embedded Image'>"
-    return embed_code, 200, {'Content-Type': 'text/html'}
 
+    embed = {
+        "embeds": [
+            {
+                "image": {
+                    "url": link
+                }
+            }
+        ]
+    }
+    return jsonify(embed)
+    
 @app.route('/card')
 def generate_rank_card():
     name = request.args.get('name')
