@@ -8,7 +8,6 @@ import string
 
 app = Flask(__name__)
 
-app.config['UPLOAD_FOLDER'] = 'uploads'
 BASE_URL = 'https://api-denzel.vercel.app/'
 
 @app.route("/")
@@ -18,19 +17,24 @@ def start():
 @app.route("/check")
 def mbsa():
     return render_template('index.html')
-    
-def generate_random_string(length=10):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-@app.route('/<random_string>', methods=['GET'])
-def embed_image(random_string):
+@app.route('/generate_embed', methods=['GET'])
+def generate_embed():
     link = request.args.get('link')
     if not link:
         return jsonify({'error': 'Missing link parameter'})
-
-    embed_code = f"<img src='{link}' alt='Embedded Image'>"
-    return render_template_string(embed_code)
-
+    
+    embed_code = {
+        "content": None,
+        "embeds": [
+            {
+                "image": {"url": link}
+            }
+        ]
+    }
+    
+    return jsonify(embed_code)
+    
 @app.route('/card')
 def generate_rank_card():
     name = request.args.get('name')
