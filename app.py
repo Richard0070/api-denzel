@@ -40,17 +40,8 @@ def embed_image(random_string):
     if not link:
         return jsonify({'error': 'Link not found'})
 
-    embed = {
-        "embeds": [
-            {
-                "image": {
-                    "url": link
-                }
-            }
-        ]
-    }
-    return jsonify(embed)
-    
+    return render_template('embed.html', image_url=link)
+
 @app.route('/card')
 def generate_rank_card():
     name = request.args.get('name')
