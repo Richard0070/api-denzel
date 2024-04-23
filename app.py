@@ -3,6 +3,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
+import random 
+import string
 
 app = Flask(__name__)
 
