@@ -1,8 +1,10 @@
-from flask import Flask, request, send_file, render_template, jsonify
+from flask import Flask, request, send_file, render_template_string, jsonify
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
+import random 
+import string
 
 app = Flask(__name__)
 
@@ -17,13 +19,17 @@ def start():
 def mbsa():
     return render_template('index.html')
     
-@app.route('/imagehost', methods=['GET'])
-def image_host():
+def generate_random_string(length=10):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+@app.route('/<random_string>', methods=['GET'])
+def embed_image(random_string):
     link = request.args.get('link')
     if not link:
         return jsonify({'error': 'Missing link parameter'})
-    
-    return jsonify({'embed_link': link})
+
+    embed_code = f"<img src='{link}' alt='Embedded Image'>"
+    return render_template_string(embed_code)
 
 @app.route('/card')
 def generate_rank_card():
