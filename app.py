@@ -1,10 +1,13 @@
-from flask import Flask, request, send_file, render_template
+from flask import Flask, request, send_file, render_template, jsonify
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
 
 app = Flask(__name__)
+
+app.config['UPLOAD_FOLDER'] = 'uploads'
+BASE_URL = 'https://api-denzel.vercel.app/'
 
 @app.route("/")
 def start():
@@ -13,6 +16,9 @@ def start():
 @app.route("/check")
 def mbsa():
     return render_template('index.html')
+
+def generate_random_string(length=10):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
 def download_image(url, filepath):
     try:
