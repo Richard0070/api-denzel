@@ -9,6 +9,7 @@ import string
 app = Flask(__name__)
 
 BASE_URL = 'https://api-denzel.vercel.app/'
+links_storage = {}
 
 @app.route("/")
 def start():
@@ -18,22 +19,29 @@ def start():
 def mbsa():
     return render_template('index.html')
 
-@app.route('/generate_embed', methods=['GET'])
-def generate_embed():
-    link = request.args.get('link')
+def generate_random_string(length=10):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+@app.route('/generate_link', methods=['POST'])
+def generate_link():
+    link = request.json.get('link')
     if not link:
         return jsonify({'error': 'Missing link parameter'})
+
+    random_string = generate_random_string()
+    new_link = BASE_URL + random_string
+    links_storage[random_string] = link  # Store the link in the dictionary
     
-    embed_code = {
-        "content": None,
-        "embeds": [
-            {
-                "image": {"url": link}
-            }
-        ]
-    }
+    return jsonify({'new_link': new_link})
+
+@app.route('/<random_string>', methods=['GET'])
+def embed_image(random_string):
+    link = links_storage.get(random_string)
+    if not link:
+        return jsonify({'error': 'Link not found'})
     
-    return jsonify(embed_code)
+    embed_code = f"<img src='{link}' alt='Embedded Image'>"
+    return embed_code, 200, {'Content-Type': 'text/html'}
     
 @app.route('/card')
 def generate_rank_card():
