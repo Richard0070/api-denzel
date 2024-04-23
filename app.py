@@ -3,8 +3,6 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
-import random 
-import string
 
 app = Flask(__name__)
 
@@ -18,38 +16,15 @@ def start():
 @app.route("/check")
 def mbsa():
     return render_template('index.html')
-
-def generate_random_string(length=10):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-def download_image(url, filepath):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            with open(filepath, 'wb') as f:
-                f.write(response.content)
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(f"Error downloading image: {e}")
-        return False
-
+    
 @app.route('/imagehost', methods=['GET'])
 def image_host():
     link = request.args.get('link')
     if not link:
         return jsonify({'error': 'Missing link parameter'})
     
-    filename = generate_random_string() + '.jpg'
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-    if download_image(link, filepath):
-        embed_link = BASE_URL + filename
-        return jsonify({'embed_link': embed_link})
-    else:
-        return jsonify({'error': 'Failed to download image'})
-        
+    return jsonify({'embed_link': link})
+
 @app.route('/card')
 def generate_rank_card():
     name = request.args.get('name')
