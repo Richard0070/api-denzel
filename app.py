@@ -3,8 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
-import random 
-import string
+from pyppeteer import launch
 
 app = Flask(__name__)
 
@@ -18,28 +17,25 @@ def start():
 def mbsa():
     return render_template('index.html')
 
-def generate_random_string(length=10):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+async def capture_screenshot(url):
+    browser = await launch()
+    page = await browser.newPage()
+    await page.goto(url)
+    screenshot = await page.screenshot()
+    await browser.close()
+    return screenshot
 
-@app.route('/generate_link', methods=['GET'])
-def generate_link():
-    link = request.args.get('link')
-    if not link:
-        return jsonify({'error': 'Missing link parameter'})
-
-    random_string = generate_random_string()
-    new_link = BASE_URL + random_string
-    links_storage[random_string] = link  # Store the link in the dictionary
+@app.route('/screenshot', methods=['GET'])
+def get_screenshot():
+    url = request.args.get('url')
+    if not url:
+        return "Please provide a URL parameter", 400
     
-    return jsonify({'new_link': new_link})
-
-@app.route('/<random_string>', methods=['GET'])
-def embed_image(random_string):
-    link = links_storage.get(random_string)
-    if not link:
-        return jsonify({'error': 'Link not found'})
-
-    return render_template('embed.html', image_url=link)
+    try:
+        screenshot = await capture_screenshot(url)
+        return send_file(screenshot, mimetype='image/png')
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 @app.route('/card')
 def generate_rank_card():
