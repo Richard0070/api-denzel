@@ -30,7 +30,14 @@ async def get_screenshot():
     
     try:
         screenshot_data = await capture_screenshot(url)
-        return send_file(io.BytesIO(screenshot_data), mimetype='image/png')
+        
+        # Save screenshot data to a temporary file in /tmp directory
+        tmp_filename = '/tmp/screenshot.png'
+        with open(tmp_filename, 'wb') as f:
+            f.write(screenshot_data)
+        
+        # Send the temporary file as response
+        return send_file(tmp_filename, mimetype='image/png', as_attachment=True)
     except Exception as e:
         return f"Error: {str(e)}", 500
 
