@@ -8,38 +8,43 @@ from pyppeteer import launch
 
 app = Flask(__name__)
 
-BASE_URL = 'https://api-denzel.vercel.app/'
-
 @app.route("/")
 def start():
     return "API Denzel is Running"
-    
-async def capture_screenshot(url):
-    browser = await launch()
-    page = await browser.newPage()
-    await page.goto(url)
-    screenshot = await page.screenshot()
-    await browser.close()
-    return screenshot
 
-@app.route('/screenshot', methods=['GET'])
-async def get_screenshot():
-    url = request.args.get('url')
-    if not url:
-        return "Please provide a URL parameter", 400
-    
-    try:
-        screenshot_data = await capture_screenshot(url)
-        
-        # Save screenshot data to a temporary file in /tmp directory
-        tmp_filename = '/tmp/screenshot.png'
-        with open(tmp_filename, 'wb') as f:
-            f.write(screenshot_data)
-        
-        # Send the temporary file as response
-        return send_file(tmp_filename, mimetype='image/png', as_attachment=True)
-    except Exception as e:
-        return f"Error: {str(e)}", 500
+@app.route('/welcome')
+def generate_welcome_image():
+    avatar_url = request.args.get('avatar', '')
+    username = request.args.get('username', '')
+    displayname = request.args.get('displayname', '')
+    base_image = Image.open("wlcm.png")
+    avatar_image = Image.open(requests.get(avatar_url, stream=True).raw)
+    avatar_image = avatar_image.resize((160, 160))  
+    mask = Image.new("L", avatar_image.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, avatar_image.size[0], avatar_image.size[1]), fill=255)
+    avatar_image = ImageOps.fit(avatar_image, mask.size, centering=(0.5, 0.5))
+    avatar_image.putalpha(mask)
+
+    font1 = ImageFont.truetype("fonts/ggfont.woff", 50)
+    font2 = ImageFont.truetype("fonts/ggfont.woff", 30)
+
+    draw = ImageDraw.Draw(base_image)
+
+    base_image.paste(avatar_image, (100, 95), avatar_image)
+
+    if len(displayname) > 13:
+        displayname = f'{displayname[:10]}...'
+
+    if len(username) > 20:
+        username = f'{username[:17]}...'
+
+    draw.text((320, 120), displayname, fill=(255, 255, 255), font=font1)
+    draw.text((320, 180), username, fill="#dddddd", font=font2)
+
+    base_image.save("welcome_image.png")
+
+    return send_file("welcome_image.png", mimetype='image/png')
 
 @app.route('/card')
 def generate_rank_card():
