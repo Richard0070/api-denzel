@@ -40,10 +40,13 @@ def generate_welcome_image():
 
     draw.text((320, 120), displayname, fill=(255, 255, 255), font=font1)
     draw.text((320, 180), username, fill="#dddddd", font=font2)
+    
+    img_byte_array = io.BytesIO()
+    base_image.save(img_byte_array, format='PNG')
+    img_byte_array.seek(0)
 
-    base_image.save("welcome_image.png")
+    return send_file(img_byte_array, mimetype='image/png')
 
-    return send_file("welcome_image.png", mimetype='image/png')
 
 @app.route('/card')
 def generate_rank_card():
