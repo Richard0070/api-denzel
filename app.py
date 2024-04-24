@@ -12,12 +12,13 @@ def start():
 
 @app.route('/welcome')
 def generate_welcome_image():
-    avatar_url = request.args.get('avatar', '')
-    username = request.args.get('username', '')
-    displayname = request.args.get('displayname', '')
+    username = request.args.get('username')
+    displayname = request.args.get('displayname')
     base_image = Image.open("wlcm.png")
-    avatar_image = Image.open(requests.get(avatar_url, stream=True).raw)
-    avatar_image = avatar_image.resize((160, 160))  
+
+    avatar = request.args.get('avatar')
+    avatar_image = Image.open(requests.get(avatar, stream=True).raw).convert("RGBA").resize((160, 160))
+     
     mask = Image.new("L", avatar_image.size, 0)
     draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0, avatar_image.size[0], avatar_image.size[1]), fill=255)
