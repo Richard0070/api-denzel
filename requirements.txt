@@ -1,5 +1,4 @@
-Flask[async]
+Flask
 Pillow==8.4.0
 Werkzeug==2.2.2
 requests
-pyppeteer
