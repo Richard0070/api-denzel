@@ -1,8 +1,9 @@
-from flask import Flask, request, send_file, render_template_string, jsonify
+from flask import Flask, request, send_file, render_template_string
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
+import asyncio
 from pyppeteer import launch
 
 app = Flask(__name__)
@@ -13,10 +14,6 @@ BASE_URL = 'https://api-denzel.vercel.app/'
 def start():
     return "API Denzel is Running"
     
-@app.route("/check")
-def mbsa():
-    return render_template('index.html')
-
 async def capture_screenshot(url):
     browser = await launch()
     page = await browser.newPage()
@@ -26,14 +23,14 @@ async def capture_screenshot(url):
     return screenshot
 
 @app.route('/screenshot', methods=['GET'])
-def get_screenshot():
+async def get_screenshot():
     url = request.args.get('url')
     if not url:
         return "Please provide a URL parameter", 400
     
     try:
         screenshot = await capture_screenshot(url)
-        return send_file(screenshot, mimetype='image/png')
+        return send_file(io.BytesIO(screenshot), mimetype='image/png')
     except Exception as e:
         return f"Error: {str(e)}", 500
 
@@ -124,4 +121,3 @@ def generate_card():
 
 if __name__ == "__main__":
     app.run(debug=True)
-    
