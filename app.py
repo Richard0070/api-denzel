@@ -3,8 +3,6 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
-import asyncio
-from pyppeteer import launch
 
 app = Flask(__name__)
 
