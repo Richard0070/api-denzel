@@ -29,8 +29,8 @@ async def get_screenshot():
         return "Please provide a URL parameter", 400
     
     try:
-        screenshot = await capture_screenshot(url)
-        return send_file(io.BytesIO(screenshot), mimetype='image/png')
+        screenshot_data = await capture_screenshot(url)
+        return send_file(io.BytesIO(screenshot_data), mimetype='image/png')
     except Exception as e:
         return f"Error: {str(e)}", 500
 
