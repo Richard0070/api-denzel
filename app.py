@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, jsonify, render_template_string
+from flask import Flask, request, send_file, jsonify, render_template_string, Response
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
