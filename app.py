@@ -1,14 +1,34 @@
-from flask import Flask, request, send_file, render_template_string
+from flask import Flask, request, send_file, jsonify, render_template_string
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
+from bardapi import BardCookies
 
 app = Flask(__name__)
 
 @app.route("/")
 def start():
     return "API Denzel is Running"
+
+@app.route('/bard', methods=['GET'])
+def get_answer():
+    question = request.args.get('question')
+    key1 = request.args.get('key1')
+    key2 = request.args.get('key2')
+    
+    if not question:
+        return jsonify({"error": "Question parameter is missing."}), 400
+    
+    cookie_dict = {
+        "__Secure-1PSID": key1,
+        "__Secure-1PSIDCC": key2,
+    }
+    
+    bard = BardCookies(cookie_dict=cookie_dict)
+    answer = bard.get_answer(question)['content']
+    
+    return jsonify({"answer": answer})
 
 @app.route('/welcome')
 def generate_welcome_image():
