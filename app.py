@@ -1,10 +1,10 @@
-from flask import Flask, request, send_file, jsonify, render_template_string, make_response
+from flask import Flask, request, send_file, jsonify, render_template_string
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
-import asyncio
 from bardapi import BardCookies
+import textwrap
 
 app = Flask(__name__)
 
@@ -28,18 +28,10 @@ def get_answer():
     
     bard = BardCookies(cookie_dict=cookie_dict)
     answer = bard.get_answer(question)['content']
+    wrapped_answer = textwrap.wrap(answer, width=2000)
+    response_data = '\n'.join(wrapped_answer)
     
-    # Split the answer into chunks of 2000 characters
-    chunked_answer = [answer[i:i+2000] for i in range(0, len(answer), 2000)]
-    
-    # Join chunks into a single string
-    response_data = ''.join(chunked_answer)
-    
-    # Create a response object with the answer
-    response = make_response(response_data)
-    response.mimetype = 'text/plain'
-    
-    return response
+    return response_data
 
 @app.route('/welcome')
 def generate_welcome_image():
