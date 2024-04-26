@@ -2,3 +2,4 @@ Flask
 Pillow==8.4.0
 Werkzeug==2.2.2
 requests
+git+https://github.com/Richard0070/Bard-Api-Discord.git
