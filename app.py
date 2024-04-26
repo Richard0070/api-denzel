@@ -41,9 +41,6 @@ def get_answer():
     
     return response
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 @app.route('/welcome')
 def generate_welcome_image():
     username = request.args.get('username')
