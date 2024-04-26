@@ -28,7 +28,12 @@ def get_answer():
     bard = BardCookies(cookie_dict=cookie_dict)
     answer = bard.get_answer(question)['content']
     
-    return jsonify({"answer": answer})
+    chunked_answer = [answer[i:i+2000] for i in range(0, len(answer), 2000)]
+    
+    def generate_chunks():
+        for chunk in chunked_answer:
+            yield chunk
+    return Response(generate_chunks(), mimetype='text/plain')
 
 @app.route('/welcome')
 def generate_welcome_image():
