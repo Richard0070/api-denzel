@@ -31,7 +31,7 @@ def get_answer():
     wrapped_answer = textwrap.wrap(answer, width=2000)
     response_data = '\n'.join(wrapped_answer)
     
-    return response_data
+    return jsonify({"answer": response_data})
 
 @app.route('/welcome')
 def generate_welcome_image():
