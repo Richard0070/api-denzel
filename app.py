@@ -3,8 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
-from bardapi import BardCookies, max_token
-import textwrap
+from bardapi import BardCookies
 
 app = Flask(__name__)
 
@@ -27,11 +26,9 @@ def get_answer():
     }
     
     bard = BardCookies(cookie_dict=cookie_dict)
-    answer = max_token(bard.get_answer(question)['content'], 2000)
-    wrapped_answer = textwrap.wrap(answer, width=2000)
-    response_data = '\n'.join(wrapped_answer)
-    
-    return jsonify({"answer": response_data})
+    answer = bard.get_answer(question)['content']
+   
+    return jsonify({"answer": answer})
 
 @app.route('/welcome')
 def generate_welcome_image():
