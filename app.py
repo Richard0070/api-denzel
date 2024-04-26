@@ -12,17 +12,8 @@ app = Flask(__name__)
 def start():
     return "API Denzel is Running"
 
-async def fetch_answer(question, key1, key2):
-    cookie_dict = {
-        "__Secure-1PSID": key1,
-        "__Secure-1PSIDCC": key2,
-    }
-    bard = BardCookies(cookie_dict=cookie_dict)
-    answer = bard.get_answer(question)['content']
-    return answer
-
 @app.route('/bard', methods=['GET'])
-async def get_answer():
+def get_answer():
     question = request.args.get('question')
     key1 = request.args.get('key1')
     key2 = request.args.get('key2')
@@ -30,14 +21,23 @@ async def get_answer():
     if not question:
         return jsonify({"error": "Question parameter is missing."}), 400
     
-    answer = await fetch_answer(question, key1, key2)
+    cookie_dict = {
+        "__Secure-1PSID": key1,
+        "__Secure-1PSIDCC": key2,
+    }
     
+    bard = BardCookies(cookie_dict=cookie_dict)
+    answer = bard.get_answer(question)['content']
+    
+    # Split the answer into chunks of 2000 characters
     chunked_answer = [answer[i:i+2000] for i in range(0, len(answer), 2000)]
     
-    async def generate_chunks():
+    # Return a generator that yields each chunk of the answer
+    def generate_chunks():
         for chunk in chunked_answer:
             yield chunk
     
+    # Return a response with the generator as the content
     return Response(generate_chunks(), mimetype='text/plain')
 
 @app.route('/welcome')
