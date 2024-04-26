@@ -27,10 +27,8 @@ def get_answer():
     
     bard = BardCookies(cookie_dict=cookie_dict)
     answer = bard.get_answer(question)['content']
-    image_links = answer['links'] # Get image links (list)
-    images = answer['images']  # Get image links (list)
    
-    return jsonify({"answer": answer, "image_links": image_links, "images": images})
+    return jsonify({"answer": answer)
 
 @app.route('/welcome')
 def generate_welcome_image():
