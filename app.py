@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, jsonify, render_template_string, Response
+from flask import Flask, request, send_file, jsonify, render_template_string, make_response
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
@@ -32,13 +32,17 @@ def get_answer():
     # Split the answer into chunks of 2000 characters
     chunked_answer = [answer[i:i+2000] for i in range(0, len(answer), 2000)]
     
-    # Return a generator that yields each chunk of the answer
-    def generate_chunks():
-        for chunk in chunked_answer:
-            yield chunk
+    # Join chunks into a single string
+    response_data = ''.join(chunked_answer)
     
-    # Return a response with the generator as the content
-    return Response(generate_chunks(), mimetype='text/plain')
+    # Create a response object with the answer
+    response = make_response(response_data)
+    response.mimetype = 'text/plain'
+    
+    return response
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 @app.route('/welcome')
 def generate_welcome_image():
