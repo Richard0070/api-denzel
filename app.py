@@ -27,8 +27,8 @@ def get_answer():
     
     bard = BardCookies(cookie_dict=cookie_dict)
     answer = bard.get_answer(question)['content']
-    image_links = response.get('links', [])  # Get image links (list)
-    images = response.get('images', [])  # Get image links (list)
+    image_links = answer['links'] # Get image links (list)
+    images = answer['images']  # Get image links (list)
    
     return jsonify({"answer": answer, "image_links": image_links, "images": images})
 
