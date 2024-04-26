@@ -4,4 +4,3 @@ Werkzeug==2.2.2
 requests
 aiohttp
 bardapi
-textwrap
