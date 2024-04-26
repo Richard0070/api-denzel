@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
+import asyncio
 from bardapi import BardCookies
 
 app = Flask(__name__)
@@ -11,8 +12,17 @@ app = Flask(__name__)
 def start():
     return "API Denzel is Running"
 
+async def fetch_answer(question, key1, key2):
+    cookie_dict = {
+        "__Secure-1PSID": key1,
+        "__Secure-1PSIDCC": key2,
+    }
+    bard = BardCookies(cookie_dict=cookie_dict)
+    answer = bard.get_answer(question)['content']
+    return answer
+
 @app.route('/bard', methods=['GET'])
-def get_answer():
+async def get_answer():
     question = request.args.get('question')
     key1 = request.args.get('key1')
     key2 = request.args.get('key2')
@@ -20,19 +30,14 @@ def get_answer():
     if not question:
         return jsonify({"error": "Question parameter is missing."}), 400
     
-    cookie_dict = {
-        "__Secure-1PSID": key1,
-        "__Secure-1PSIDCC": key2,
-    }
-    
-    bard = BardCookies(cookie_dict=cookie_dict)
-    answer = bard.get_answer(question)['content']
+    answer = await fetch_answer(question, key1, key2)
     
     chunked_answer = [answer[i:i+2000] for i in range(0, len(answer), 2000)]
     
-    def generate_chunks():
+    async def generate_chunks():
         for chunk in chunked_answer:
             yield chunk
+    
     return Response(generate_chunks(), mimetype='text/plain')
 
 @app.route('/welcome')
