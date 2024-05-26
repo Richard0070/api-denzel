@@ -16,16 +16,19 @@ def start():
     return "API Denzel is Running"
 
 def get_video(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    video_tag = soup.find('meta', property='og:video')
-    if video_tag:
-        return video_tag.get('content')
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        video_tag = soup.find('meta', property='og:video')
+        if video_tag:
+            return video_tag.get('content')
+    except Exception as e:
+        print(f"Error fetching video URL: {e}")
     return None
 
 @app.route('/download', methods=['POST'])
 def download_video():
-    print("request coming in...")
+    print("Request received...")
 
     try:
         data = request.get_json()
@@ -35,7 +38,11 @@ def download_video():
         else:
             return jsonify({'error': 'The link you have entered is invalid.'})
     except Exception as e:
+        print(f"Error processing request: {e}")
         return jsonify({'error': 'There is a problem with the link you have provided.'})
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
