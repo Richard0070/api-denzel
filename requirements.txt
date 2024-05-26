@@ -6,3 +6,4 @@ aiohttp
 bardapi
 flask-cors
 beautifulsoup4
+instascrape
