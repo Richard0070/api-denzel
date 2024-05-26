@@ -27,7 +27,6 @@ def get_video(url):
     try:
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser')
-        print(soup.prettify())  # Print the HTML content for debugging
 
         video_tag = soup.find('meta', property='og:video')
         if not video_tag:
@@ -39,20 +38,21 @@ def get_video(url):
         print(f"Error fetching video URL: {e}")
     return None
 
-@app.route('/api/download', methods=['POST'])
+@app.route('/api/download', methods=['GET'])
 def download_video():
-    print("Request received...")
+    url = request.args.get('url')
+    if not url:
+        return jsonify({'error': 'URL parameter is missing.'}), 400
 
     try:
-        data = request.get_json()
-        video_link = get_video(data['url'])
+        video_link = get_video(url)
         if video_link:
             return jsonify({'downloadLink': video_link})
         else:
-            return jsonify({'error': 'The link you have entered is invalid.'})
+            return jsonify({'error': 'The link you have entered is invalid.'}), 404
     except Exception as e:
         print(f"Error processing request: {e}")
-        return jsonify({'error': 'There is a problem with the link you have provided.'})
+        return jsonify({'error': 'There is a problem with the link you have provided.'}), 500
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
