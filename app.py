@@ -4,12 +4,38 @@ import requests
 import os
 import io
 from bardapi import BardCookies
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
+
+from flask_cors import CORS
+CORS(app)
 
 @app.route("/")
 def start():
     return "API Denzel is Running"
+
+def get_video(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    video_tag = soup.find('meta', property='og:video')
+    if video_tag:
+        return video_tag.get('content')
+    return None
+
+@app.route('/api/download', methods=['POST'])
+def download_video():
+    print("request coming in...")
+
+    try:
+        data = request.get_json()
+        video_link = get_video(data['url'])
+        if video_link:
+            return jsonify({'downloadLink': video_link})
+        else:
+            return jsonify({'error': 'The link you have entered is invalid.'})
+    except Exception as e:
+        return jsonify({'error': 'There is a problem with the link you have provided.'})
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
