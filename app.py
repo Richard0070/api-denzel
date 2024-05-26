@@ -39,7 +39,7 @@ def get_video(url):
         print(f"Error fetching video URL: {e}")
     return None
 
-@app.route('/download', methods=['POST'])
+@app.route('/api/download', methods=['POST'])
 def download_video():
     print("Request received...")
 
