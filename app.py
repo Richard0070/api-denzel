@@ -23,7 +23,7 @@ def get_video(url):
         return video_tag.get('content')
     return None
 
-@app.route('/api/download', methods=['POST'])
+@app.route('/download', methods=['POST'])
 def download_video():
     print("request coming in...")
 
