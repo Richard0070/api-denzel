@@ -4,35 +4,12 @@ import requests
 import os
 import io
 from bardapi import BardCookies
-from instascrape import Reel
 
 app = Flask(__name__)
-
-from flask_cors import CORS
-CORS(app)
 
 @app.route("/")
 def start():
     return "API Denzel is Running"
-
-@app.route('/download', methods=['GET'])
-def download_video():
-    url = request.args.get('url')
-    if not url:
-        return jsonify({'error': 'URL parameter is missing.'}), 400
-
-    try:
-        reel = Reel(url)
-        reel.scrape()
-        video_link = reel.video_url
-
-        if video_link:
-            return jsonify({'downloadLink': video_link})
-        else:
-            return jsonify({'error': 'The link you have entered is invalid.'}), 404
-    except Exception as e:
-        print(f"Error processing request: {e}")
-        return jsonify({'error': 'There is a problem with the link you have provided.'}), 500
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
