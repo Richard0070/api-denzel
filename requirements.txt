@@ -4,6 +4,3 @@ Werkzeug==2.2.2
 requests
 aiohttp
 bardapi
-flask-cors
-beautifulsoup4
-instascrape
