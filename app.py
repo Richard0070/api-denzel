@@ -4,35 +4,41 @@ import requests
 import os
 import io
 from bardapi import BardCookies
-import discord
-from discord.ext import commands
-import threading
 
 app = Flask(__name__)
 
 @app.route("/")
 def start():
     return "API Denzel is Running"
-    
-bot = commands.Bot(command_prefix='!', case_insensitive=True, intents=discord.Intents.all())
 
-@app.route('/sendmessage', methods=['GET'])
+@app.route('/sendmessage', methods=['POST'])
 def send_message():
-    channel_id = request.args.get('channelid')
-    message = request.args.get('msg')
-    token = request.args.get('token')
-    
-    channel = bot.get_channel(int(channel_id))
-    if channel:
-        bot.loop.create_task(channel.send(message))
-        return "Message sent!"
-    return "Failed to send message!"
-    
-def run_flask():
-    app.run(host='0.0.0.0', port=5000)
-threading.Thread(target=run).start()
+    data = request.json
+    channelid = data.get('channelid')
+    message = data.get('message')
+    token = data.get('token')
 
-bot.run(token)
+    DISCORD_BOT_TOKEN = token
+    DISCORD_CHANNEL_ID = channelid
+
+    if not message:
+        return {'error': 'Message content is required'}, 400
+    
+    url = f'https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages'
+    headers = {
+        'Authorization': f'Bot {DISCORD_BOT_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+    json_data = {
+        'content': message
+    }
+    
+    response = requests.post(url, headers=headers, json=json_data)
+    
+    if response.status_code == 200:
+        return {'status': 'Message sent successfully'}, 200
+    else:
+        return {'error': 'Failed to send message', 'details': response.json()}, response.status_code
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
