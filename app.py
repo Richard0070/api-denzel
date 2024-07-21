@@ -4,12 +4,35 @@ import requests
 import os
 import io
 from bardapi import BardCookies
+import discord
+from discord.ext import commands
+import threading
 
 app = Flask(__name__)
 
 @app.route("/")
 def start():
     return "API Denzel is Running"
+    
+bot = commands.Bot(command_prefix='!', case_insensitive=True, intents=discord.Intents.all())
+
+@app.route('/sendmessage', methods=['GET'])
+def send_message():
+    channel_id = request.args.get('channelid')
+    message = request.args.get('msg')
+    token = request.args.get('token')
+    
+    channel = bot.get_channel(int(channel_id))
+    if channel:
+        bot.loop.create_task(channel.send(message))
+        return "Message sent!"
+    return "Failed to send message!"
+    
+def run_flask():
+    app.run(host='0.0.0.0', port=5000)
+threading.Thread(target=run).start()
+
+bot.run(token)
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
@@ -107,45 +130,6 @@ def generate_rank_card():
     draw.rectangle([(0, base_image.height - 5),
                     (progress_length, base_image.height)],
                    fill=(255, 255, 255))
-
-    img_byte_array = io.BytesIO()
-    base_image.save(img_byte_array, format='PNG')
-    img_byte_array.seek(0)
-
-    return send_file(img_byte_array, mimetype='image/png')
-
-@app.route("/card2")
-def generate_card():
-    username = request.args.get('username')
-    balance = int(request.args.get('balance'))
-    vip = request.args.get('vip', '').lower() == 'true'
-
-    base_image = Image.open('card_base.png')
-
-    if len(username) > 12:
-        username = f'{username[:12]}...'
-
-    if balance > 1000:
-        balance = f'{balance / 1000:.1f}k'
-
-    avatarurl = request.args.get('avatarurl')
-    avatar_image = Image.open(requests.get(avatarurl, stream=True).raw).convert("RGBA").resize((380, 380))
-    mask = Image.new('L', (380, 380), 0)
-    draw_mask = ImageDraw.Draw(mask)
-    draw_mask.ellipse((0, 0, 380, 380), fill=255)
-    circular_avatar = ImageOps.fit(avatar_image, mask.size, centering=(0.5, 0.5))
-    circular_avatar.putalpha(mask)
-    base_image.paste(circular_avatar, (180, 130), circular_avatar)
-
-    draw = ImageDraw.Draw(base_image)
-    font = ImageFont.truetype("fonts/book.ttf", 100)
-    draw.text((700, 160), f"Username: {username}", fill="white", font=font)
-    draw.text((700, 330), f"Laddoos: {balance}", fill="white", font=font)
-
-    if vip:
-        vip_path = "vip.png"
-        vip_image = Image.open(vip_path).resize((300, 200))
-        base_image.paste(vip_image, (1900, 180))
 
     img_byte_array = io.BytesIO()
     base_image.save(img_byte_array, format='PNG')
