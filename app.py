@@ -4,7 +4,6 @@ import requests
 import os
 import io
 from bardapi import BardCookies
-from playwright.async_api import async_playwright
 
 app = Flask(__name__)
 
@@ -12,33 +11,14 @@ app = Flask(__name__)
 def start():
     return "API Denzel is Running"
 
-@app.route('/screenshot', methods=['GET'])
-async def screenshot():
-    url = request.args.get('url')
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
-
-    async with async_playwright() as p:
-        
-        browser = await p.chromium.launch()
-        page = await browser.new_page()
-        await page.goto(url)
-        screenshot = await page.screenshot(path=screenshot_path)
-        await browser.close()
-        
-        img_byte_array = io.BytesIO(screenshot)
-        img_byte_array.seek(0)
-
-        return send_file(img_byte_array, mimetype='image/png')
-
-@app.route('/bard', methods=['GET'])
+@app.route('/translate', methods=['GET'])
 def get_answer():
-    question = request.args.get('question')
+    text = request.args.get('text')
     key1 = request.args.get('key1')
     key2 = request.args.get('key2')
     
-    if not question:
-        return jsonify({"error": "Question parameter is missing."}), 400
+    if not text:
+        return jsonify({"error": "Text to be translated is missing."}), 400
     
     cookie_dict = {
         "__Secure-1PSID": key1,
@@ -46,9 +26,9 @@ def get_answer():
     }
     
     bard = BardCookies(cookie_dict=cookie_dict)
-    answer = bard.get_answer(question)['content']
+    translation = bard.get_answer(text)['content']
    
-    return jsonify({"answer": answer})
+    return jsonify({"translation": translation})
 
 @app.route('/welcome')
 def generate_welcome_image():
