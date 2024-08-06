@@ -18,15 +18,20 @@ def get_translation():
     
     if not text:
         return jsonify({"error": "Text to be translated is missing."}), 400
+    if not key1:
+        return jsonify({"error": "API key is missing."}), 400
     
     query = f"what's the translation for \"{text}\"? just send the translated text in english. do not add anything else. if it's a slur, just say \"Slur Detected\"."
-    cookies = {"__Secure-1PSID" : key1} # Cookies may vary by account or region. Consider sending the entire cookie file.
-    client = Gemini(cookies=cookies) # You can use various args
-
-    translation = client.generate_content(query)
-   
-    return jsonify({"translation": translation.payload})
+    cookies = {"__Secure-1PSID": key1}
     
+    try:
+        client = Gemini(cookies=cookies)
+        translation = client.generate_content(query)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    return jsonify({"translation": translation.payload})
+
 @app.route('/welcome')
 def generate_welcome_image():
     username = request.args.get('username')
