@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def start():
-    return "API Denzel is Running"
+    return "Denzel™ is Running"
 
 @app.route('/translate', methods=['GET'])
 def get_translation():
