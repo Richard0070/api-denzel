@@ -1,6 +1,5 @@
-flask[async]
+Flasl
 Pillow
 Werkzeug
 requests
 bardapi
-playwright 
