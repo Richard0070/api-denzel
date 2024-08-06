@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/main.py",
+      "src": "./index.py",
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.8"
@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/main.py"
+      "dest": "/"
     }
   ]
 }
