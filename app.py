@@ -18,7 +18,7 @@ def screenshot():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    with async_playwright() as p:
+    async with async_playwright() as p:
         
         browser = await p.chromium.launch()
         page = await browser.new_page()
