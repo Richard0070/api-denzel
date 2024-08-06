@@ -26,11 +26,11 @@ def get_translation():
     
     try:
         client = Gemini(cookies=cookies)
-        translation = client.generate_content(query)
+        translation_text = translation.payload.get('candidates', [{}])[0].get('text', '')
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-    return jsonify({"translation": translation.payload})
+    return jsonify({"translation": translation_text.strip()})
 
 @app.route('/welcome')
 def generate_welcome_image():
