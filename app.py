@@ -20,7 +20,7 @@ def get_translation():
         return jsonify({"error": "Text to be translated is missing."}), 400
     
     query = f"what's the translation for \"{text}\"? just send the translated text in english. do not add anything else. if it's a slur, just say \"Slur Detected\"."
-    cookies = {"__Secure-1PSIDCC" : key1} # Cookies may vary by account or region. Consider sending the entire cookie file.
+    cookies = {"__Secure-1PSID" : key1} # Cookies may vary by account or region. Consider sending the entire cookie file.
     client = Gemini(cookies=cookies) # You can use various args
 
     translation = client.generate_content(query)
