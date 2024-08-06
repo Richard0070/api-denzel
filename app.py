@@ -4,7 +4,7 @@ import requests
 import os
 import io
 from bardapi import BardCookies
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 
 app = Flask(__name__)
 
@@ -18,13 +18,14 @@ def screenshot():
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-        page.goto(url)
-        screenshot = page.screenshot()
-        browser.close()
-
+    with async_playwright() as p:
+        
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        await page.goto(url)
+        screenshot = await page.screenshot(path=screenshot_path)
+        await browser.close()
+        
         img_byte_array = io.BytesIO(screenshot)
         img_byte_array.seek(0)
 
