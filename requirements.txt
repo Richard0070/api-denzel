@@ -4,4 +4,4 @@ Werkzeug
 requests
 bardapi
 python-gemini-api
-git+https://github.com/dsdanielpark/Bard-API.git
+bardapi
