@@ -4,6 +4,7 @@ import requests
 import os
 import io
 from bardapi import BardCookies
+from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)
 
@@ -11,34 +12,25 @@ app = Flask(__name__)
 def start():
     return "API Denzel is Running"
 
-@app.route('/sendmessage', methods=['POST'])
-def send_message():
+@app.route('/screenshot', methods=['POST'])
+def screenshot():
     data = request.json
-    channelid = data.get('channelid')
-    message = data.get('message')
-    token = data.get('token')
+    url = data.get('url')
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
 
-    DISCORD_BOT_TOKEN = token
-    DISCORD_CHANNEL_ID = channelid
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(url)
+        screenshot = page.screenshot()
+        browser.close()
 
-    if not message:
-        return {'error': 'Message content is required'}, 400
-    
-    url = f'https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages'
-    headers = {
-        'Authorization': f'Bot {DISCORD_BOT_TOKEN}',
-        'Content-Type': 'application/json'
-    }
-    json_data = {
-        'content': message
-    }
-    
-    response = requests.post(url, headers=headers, json=json_data)
-    
-    if response.status_code == 200:
-        return {'status': 'Message sent successfully'}, 200
-    else:
-        return {'error': 'Failed to send message', 'details': response.json()}, response.status_code
+        img_byte_array = io.BytesIO(screenshot)
+        img_byte_array.seek(0)
+
+        return send_file(img_byte_array, mimetype='image/png')
+
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
