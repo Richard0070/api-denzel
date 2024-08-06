@@ -12,13 +12,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/main.py"
+      "dest": "api/main.py"
     }
-  ],
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.8"
-    },
-    "cmd": "sh setup.sh"
-  }
+  ]
 }
