@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 import os
 import io
-from bardapi import BardCookies
+from gemini import Gemini
 
 app = Flask(__name__)
 
@@ -15,22 +15,17 @@ def start():
 def get_translation():
     text = request.args.get('text')
     key1 = request.args.get('key1')
-    key2 = request.args.get('key2')
     
     if not text:
         return jsonify({"error": "Text to be translated is missing."}), 400
     
     query = f"what's the translation for \"{text}\"? just send the translated text in english. do not add anything else. if it's a slur, just say \"Slur Detected\"."
-    
-    cookie_dict = {
-        "__Secure-1PSID": key1,
-        "__Secure-1PSIDCC": key2,
-    }
-    
-    bard = BardCookies(cookie_dict=cookie_dict)
-    translation = bard.get_answer(query)['content']
+    cookies = {"__Secure-1PSIDCC" : key1} # Cookies may vary by account or region. Consider sending the entire cookie file.
+    client = Gemini(cookies=cookies) # You can use various args
+
+    translation = client.generate_content(query)
    
-    return jsonify({"translation": translation})
+    return jsonify({"translation": translation.payload})
     
 @app.route('/welcome')
 def generate_welcome_image():
