@@ -12,10 +12,9 @@ app = Flask(__name__)
 def start():
     return "API Denzel is Running"
 
-@app.route('/screenshot', methods=['POST'])
+@app.route('/screenshot', methods=['GET'])
 def screenshot():
-    data = request.json
-    url = data.get('url')
+    url = request.args.get('url')
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
@@ -30,7 +29,6 @@ def screenshot():
         img_byte_array.seek(0)
 
         return send_file(img_byte_array, mimetype='image/png')
-
 
 @app.route('/bard', methods=['GET'])
 def get_answer():
