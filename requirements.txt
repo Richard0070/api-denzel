@@ -3,3 +3,5 @@ Pillow
 Werkzeug
 requests
 bardapi
+python-gemini-api
+git+https://github.com/dsdanielpark/Gemini-API.git
