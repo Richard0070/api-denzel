@@ -13,7 +13,7 @@ def start():
     return "API Denzel is Running"
 
 @app.route('/screenshot', methods=['GET'])
-def screenshot():
+async def screenshot():
     url = request.args.get('url')
     if not url:
         return jsonify({"error": "URL is required"}), 400
