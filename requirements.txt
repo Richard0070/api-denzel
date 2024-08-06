@@ -1,4 +1,4 @@
-Flasl
+Flask
 Pillow
 Werkzeug
 requests
