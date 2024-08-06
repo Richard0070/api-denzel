@@ -1,6 +1,6 @@
 Flask
-Pillow==8.4.0
-Werkzeug==2.2.2
+Pillow
+Werkzeug
 requests
-aiohttp
 bardapi
+playwright 
