@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Denzel API</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+        }
+        
+        .text {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        p {
+          position: relative;
+          font-family: sans-serif;
+          text-transform: uppercase;
+          font-size: 1.5em; 
+          letter-spacing: 2px; 
+          overflow: hidden;
+          color: #fff;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap; 
+        }
+
+        p span {
+            color: #00ff00;
+            margin-left: 6px;
+        }
+        
+
+        p2 {
+            position: relative;
+            font-family: sans-serif;
+            font-weight: 600;
+            font-size: 1em;
+            overflow: hidden;
+            background: linear-gradient(90deg, #000, #FFF, #000);
+            background-repeat: no-repeat;
+            background-size: 80%;
+            animation: animate 4s linear infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0);
+            margin-top: 20px;
+        }
+
+        @keyframes animate {
+            0% {
+                background-position: -500%;
+            }
+            100% {
+                background-position: 500%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="text">
+       <p>♥️ Denzel API is <span> Live</span></p>
+    </div>
+    <p2>~ created by @royalrizen</p2>
+</body>
+</html>
