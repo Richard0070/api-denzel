@@ -59,7 +59,7 @@ def discord_oauth_callback():
 
         return 'Woohoo! Welcome to the club, pal :D'
     except Exception as e:
-        return 'An error occurred.', 500
+        return f'An error occurred. {e}', 500
 
 @app.route('/update-metadata', methods=['POST'])
 def update_metadata_route():
