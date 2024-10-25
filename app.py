@@ -124,7 +124,7 @@ def push_metadata(user_id, tokens, metadata):
     access_token = get_access_token(user_id, tokens)
     
     body = {
-        'platform_name': 'Melody Realm',
+        'platform_name': "Melody Realm's Badges",
         'metadata': metadata,
     }
     
