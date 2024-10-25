@@ -95,6 +95,7 @@ def update_metadata(user_id):
         return
 
     metadata = {
+      key: "is_heisenberg",
       name: "the one who knocks",
       description:
         "Heisenberg",      
