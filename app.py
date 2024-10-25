@@ -111,7 +111,7 @@ def update_metadata(user_id):
         return
 
     metadata = {
-        'is_heisenberg': true
+        'is_heisenberg': 1
     }
 
     push_metadata(user_id, tokens, metadata)
