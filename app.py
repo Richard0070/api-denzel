@@ -57,10 +57,9 @@ def discord_oauth_callback():
     store_discord_tokens(user_id, {
         'access_token': tokens['access_token'],
         'refresh_token': tokens['refresh_token'],
-        'expires_at': tokens['expires_in']
+        'expires_in': tokens['expires_in']
     })
 
-    push_metadata()
     return render_template('index.html')
 
 def get_oauth_tokens(code):
@@ -88,27 +87,9 @@ def store_discord_tokens(user_id, tokens):
 
 def get_discord_tokens(user_id):
     return store.get(f'discord-{user_id}')
-
-def push_metadata():
-    url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connections/metadata"
-    body = [
-        {  
-            "key": "is_heisenberg",
-            "name": "the one who knocks",
-            "description": "Heisenberg",      
-            "type": 7
-        }
-    ]
-    
-    headers = {
-        'Authorization': f'Bot {DISCORD_TOKEN}',
-        'Content-Type': 'application/json',
-    }
-    response = requests.put(url, headers=headers, json=body)
-    response.raise_for_status()
     
 def get_access_token(user_id, tokens):
-    if tokens['expires_at'] < time.time():
+    if tokens['expires_in'] < time.time():
         url = 'https://discord.com/api/v10/oauth2/token'
         body = {
             'client_id': DISCORD_CLIENT_ID,
@@ -119,7 +100,7 @@ def get_access_token(user_id, tokens):
         response = requests.post(url, data=body)
         response.raise_for_status()
         new_tokens = response.json()
-        new_tokens['expires_at'] = time.time() + new_tokens['expires_in']
+        new_tokens['expires_in'] = time.time() + new_tokens['expires_in']
         store_discord_tokens(user_id, new_tokens)
         return new_tokens['access_token']
     return tokens['access_token']
