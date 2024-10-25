@@ -60,7 +60,7 @@ def discord_oauth_callback():
         'expires_at': tokens['expires_in']
     })
 
-    update_metadata(user_id)
+    push_metadata()
     return render_template('index.html')
 
 def get_oauth_tokens(code):
@@ -89,37 +89,24 @@ def store_discord_tokens(user_id, tokens):
 def get_discord_tokens(user_id):
     return store.get(f'discord-{user_id}')
 
-def update_metadata(user_id):
-    tokens = get_discord_tokens(user_id)
-    if not tokens:
-        return
-
-    metadata = {
-      key: "is_heisenberg",
-      name: "the one who knocks",
-      description:
-        "Heisenberg",      
-      type: 7,
-    }
-
-    push_metadata(user_id, tokens, metadata)
-
-def push_metadata(user_id, tokens, metadata):
+def push_metadata():
     url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connection/metadata"
-    access_token = get_access_token(user_id, tokens)
-    
-    body = {
-        'platform_name': 'Melody Realm',
-        'metadata': metadata,
-    }
+    body = [
+        {  
+            "key": "is_heisenberg",
+            "name": "the one who knocks",
+            "description": "Heisenberg",      
+            "type": 7
+        }
+    ]
     
     headers = {
-        'Authorization': f'Bearer {access_token}',
+        'Authorization': f'Bot {DISCORD_TOKEN}',
         'Content-Type': 'application/json',
     }
     response = requests.put(url, headers=headers, json=body)
     response.raise_for_status()
-
+    
 def get_access_token(user_id, tokens):
     if tokens['expires_at'] < time.time():
         url = 'https://discord.com/api/v10/oauth2/token'
