@@ -90,7 +90,7 @@ def get_discord_tokens(user_id):
     return store.get(f'discord-{user_id}')
 
 def push_metadata():
-    url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connection/metadata"
+    url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connections/metadata"
     body = [
         {  
             "key": "is_heisenberg",
