@@ -96,7 +96,7 @@ def get_oauth_tokens(code):
     response = requests.post(token_url, data=data)
     if response.ok:
         return response.json()    
-    raise Exception(f"Failed to get OAuth tokens. {response.status_code} - {response.text}")
+    raise Exception(f"Failed to get OAuth tokens. {response.status_code} - {response.text} | {code} | {data}")
 
 def get_user_data(tokens):
     user_url = "https://discord.com/api/v10/users/@me"
