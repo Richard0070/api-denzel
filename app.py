@@ -1,13 +1,55 @@
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from io import BytesIO
 import requests
-from flask import Flask, send_file, request, render_template, jsonify
+from flask import Flask, send_file, request, render_template, jsonify, redirect
+import os
 
 app = Flask(__name__)
 
 @app.route("/")
 def index():
     return render_template('index.html')
+
+@app.route('/api/oauth')
+def oauth():
+    discord_oauth_url = (
+        "https://discord.com/api/oauth2/authorize"
+        f"?client_id={os.getenv('DISCORD_CLIENT_ID')}"
+        "&redirect_uri=" + os.getenv('REDIRECT_URI') +
+        "&response_type=code&scope=identify%20role_connections.write"
+    )
+    return redirect(discord_oauth_url) 
+
+@app.route('/api/callback')
+def callback():
+    code = request.args.get('code')
+    token_url = "https://discord.com/api/v10/oauth2/token"
+    data = {
+        "client_id": os.getenv("DISCORD_CLIENT_ID"),
+        "client_secret": os.getenv("DISCORD_CLIENT_SECRET"),
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": os.getenv("REDIRECT_URI"),
+        "scope": "identify role_connections.write"
+    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    response = requests.post(token_url, data=data, headers=headers)
+    return jsonify(response.json())
+
+@app.route('/api/update_metadata', methods=['POST'])
+def update_metadata():
+    access_token = request.json.get('access_token')
+    metadata = {
+        "account_verified": True,
+        "minimum_score": 1000
+    }
+    url = f"https://discord.com/api/v10/users/@me/applications/{os.getenv('DISCORD_APPLICATION_ID')}/role-connection"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+    response = requests.put(url, headers=headers, json={"metadata": metadata})
+    return jsonify(response.json())
 
 @app.route('/welcome')
 def generate_welcome_image():
