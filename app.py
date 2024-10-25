@@ -63,12 +63,6 @@ def discord_oauth_callback():
     update_metadata(user_id)
     return render_template('index.html')
 
-@app.route('/update-metadata', methods=['POST'])
-def update_metadata_route():
-    user_id = request.json['userId']
-    update_metadata(user_id)
-    return '', 204
-
 def get_oauth_tokens(code):
     url = 'https://discord.com/api/v10/oauth2/token'
     body = {
@@ -79,8 +73,7 @@ def get_oauth_tokens(code):
         'redirect_uri': DISCORD_REDIRECT_URI,
     }
     response = requests.post(url, data=body)
-    response.raise_for_status()
-    print("OAuth token response:", response.json())  
+    response.raise_for_status() 
     return response.json()
 
 def get_user_data(access_token):
@@ -102,9 +95,10 @@ def update_metadata(user_id):
         return
 
     metadata = {
-        'cookieseaten': 1483,
-        'allergictonuts': 0,
-        'firstcookiebaked': '2003-12-20',
+      name: "the one who knocks",
+      description:
+        "Heisenberg",      
+      type: 7,
     }
 
     push_metadata(user_id, tokens, metadata)
