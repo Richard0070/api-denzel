@@ -105,7 +105,7 @@ def update_metadata(user_id):
     push_metadata(user_id, tokens, metadata)
 
 def push_metadata(user_id, tokens, metadata):
-    url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connection"
+    url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connection/metadata"
     access_token = get_access_token(user_id, tokens)
     
     body = {
