@@ -56,7 +56,7 @@ def discord_oauth_callback():
     store_discord_tokens(user_id, {
         'access_token': tokens['access_token'],
         'refresh_token': tokens['refresh_token'],
-        'expires_at': tokens['expires_at']
+        'expires_at': tokens['expires_in']
     })
 
     update_metadata(user_id)
