@@ -3,122 +3,144 @@ from io import BytesIO
 import requests
 from flask import Flask, send_file, request, render_template, jsonify, redirect, make_response
 import os
-from urllib.parse import urlencode
+import json
 
 app = Flask(__name__)
-
-store = {}
-
-DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
-DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
 
 @app.route("/")
 def index():
     return render_template('index.html')
 
+app = Flask(__name__) 
+app.secret_key = os.getenv('COOKIE_SECRET')
+
+# Load environment variables
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+DISCORD_CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
+DISCORD_CLIENT_SECRET = os.getenv('DISCORD_CLIENT_SECRET')
+DISCORD_REDIRECT_URI = os.getenv('DISCORD_REDIRECT_URI')
+
+# In-memory store for Discord tokens
+store = {}
+
 @app.route('/linked-role')
 def linked_role():
-    state = os.urandom(16).hex()
+    state = secrets.token_urlsafe(16)
     url = (
-        "https://discord.com/api/oauth2/authorize?"
-        + urlencode({
-            "client_id": DISCORD_CLIENT_ID,
-            "redirect_uri": REDIRECT_URI,
-            "response_type": "code",
-            "scope": "identify role_connections.write",
-            "state": state,
-        })
+        f"https://discord.com/api/oauth2/authorize"
+        f"?client_id={DISCORD_CLIENT_ID}"
+        f"&redirect_uri={DISCORD_REDIRECT_URI}"
+        f"&response_type=code"
+        f"&state={state}"
+        f"&scope=role_connections.write identify"
+        f"&prompt=consent"
     )
-    
+
     resp = make_response(redirect(url))
-    resp.set_cookie('clientState', state, max_age=300)
+    resp.set_cookie('clientState', state, max_age=300, secure=True, httponly=True)
     return resp
 
 @app.route('/discord-oauth-callback')
 def discord_oauth_callback():
-    try:
-        code = request.args.get('code')
-        discord_state = request.args.get('state')
-        client_state = request.cookies.get('clientState')
+    code = request.args.get('code')
+    discord_state = request.args.get('state')
+    client_state = request.cookies.get('clientState')
 
-        if not code:
-            return 'Authorization code is missing.', 400
+    if client_state != discord_state:
+        return 'State verification failed.', 403
 
-        if client_state != discord_state:
-            return 'State verification failed.', 403
+    tokens = get_oauth_tokens(code)
 
-        tokens = get_oauth_tokens(code)
-        user_data = get_user_data(tokens)
-        user_id = user_data['id']
+    me_data = get_user_data(tokens['access_token'])
+    user_id = me_data['user']['id']
 
-        store[user_id] = {
-            "access_token": tokens['access_token'],
-            "refresh_token": tokens['refresh_token'],
-            "expires_at": tokens['expires_at'],
-        }
+    store_discord_tokens(user_id, {
+        'access_token': tokens['access_token'],
+        'refresh_token': tokens['refresh_token'],
+        'expires_at': tokens['expires_at']
+    })
 
-        update_metadata(user_id)
+    update_metadata(user_id)
 
-        return 'Woohoo! Welcome to the club, pal :D'
-    except Exception as e:
-        return f'An error occurred. {str(e)}', 500
+    return 'You did it! Now go back to Discord.'
 
 @app.route('/update-metadata', methods=['POST'])
 def update_metadata_route():
-    user_id = request.json.get('user_id')
-    try:
-        update_metadata(user_id)
-        return '', 204
-    except Exception as e:
-        return f'An error occurred: {str(e)}', 500
+    user_id = request.json['userId']
+    update_metadata(user_id)
+    return '', 204
+
+def get_oauth_tokens(code):
+    url = 'https://discord.com/api/v10/oauth2/token'
+    body = {
+        'client_id': DISCORD_CLIENT_ID,
+        'client_secret': DISCORD_CLIENT_SECRET,
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': DISCORD_REDIRECT_URI,
+    }
+    response = requests.post(url, data=body)
+    response.raise_for_status()
+    return response.json()
+
+def get_user_data(access_token):
+    url = 'https://discord.com/api/v10/oauth2/@me'
+    headers = {'Authorization': f'Bearer {access_token}'}
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+def store_discord_tokens(user_id, tokens):
+    store[f'discord-{user_id}'] = tokens
+
+def get_discord_tokens(user_id):
+    return store.get(f'discord-{user_id}')
 
 def update_metadata(user_id):
-    tokens = store.get(user_id)
+    tokens = get_discord_tokens(user_id)
     if not tokens:
-        raise Exception("User not found.")
+        return
 
     metadata = {
-        "cookieseaten": 1483,
-        "allergictonuts": 0,
-        "firstcookiebaked": "2003-12-20",
+        'cookieseaten': 1483,
+        'allergictonuts': 0,
+        'firstcookiebaked': '2003-12-20',
     }
 
     push_metadata(user_id, tokens, metadata)
 
-def get_oauth_tokens(code):
-    token_url = "https://discord.com/api/v10/oauth2/token"
-    data = {
-        "client_id": DISCORD_CLIENT_ID,
-        "client_secret": DISCORD_CLIENT_SECRET,
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": REDIRECT_URI,
-    }
-    response = requests.post(token_url, data=data)
-    if response.ok:
-        return response.json()
-    raise Exception(f"Failed to get OAuth tokens. {response.status_code} - {response.text} | {code} | {data}")
-
-def get_user_data(tokens):
-    user_url = "https://discord.com/api/v10/users/@me"
-    headers = {
-        "Authorization": f"Bearer {tokens['access_token']}"
-    }
-    response = requests.get(user_url, headers=headers)
-    if response.ok:
-        return response.json()
-    raise Exception(f"Failed to fetch user data. {response.status_code} - {response.text}")
-
 def push_metadata(user_id, tokens, metadata):
-    url = f"https://discord.com/api/v10/users/@me/applications/{os.getenv('DISCORD_APPLICATION_ID')}/role-connection"
-    headers = {
-        "Authorization": f"Bearer {tokens['access_token']}",
-        "Content-Type": "application/json",
+    url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connection"
+    access_token = get_access_token(user_id, tokens)
+    
+    body = {
+        'platform_name': 'Melody Realm',
+        'metadata': metadata,
     }
-    response = requests.put(url, headers=headers, json={"metadata": metadata})
-    if not response.ok:
-        raise Exception(f"Failed to push metadata. {response.status_code} - {response.text}")
+    
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json',
+    }
+    response = requests.put(url, headers=headers, json=body)
+    response.raise_for_status()
+
+def get_access_token(user_id, tokens):
+    if tokens['expires_at'] < time.time():
+        url = 'https://discord.com/api/v10/oauth2/token'
+        body = {
+            'client_id': DISCORD_CLIENT_ID,
+            'client_secret': DISCORD_CLIENT_SECRET,
+            'grant_type': 'refresh_token',
+            'refresh_token': tokens['refresh_token'],
+        }
+        response = requests.post(url, data=body)
+        response.raise_for_status()
+        new_tokens = response.json()
+        new_tokens['expires_at'] = time.time() + new_tokens['expires_in']
+        store_discord_tokens(user_id, new_tokens)
+        return new_tokens['access_token']
+    return tokens['access_token']
 
 @app.route('/welcome')
 def generate_welcome_image():
