@@ -6,12 +6,12 @@ import os
 import json
 
 app = Flask(__name__)
+app.secret_key = os.getenv('COOKIE_SECRET')
 
 @app.route("/")
 def index():
     return render_template('index.html')
 
-app = Flask(__name__) 
 # Load environment variables
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 DISCORD_CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
