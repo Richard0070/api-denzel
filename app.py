@@ -1,121 +1,122 @@
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from io import BytesIO
 import requests
-from flask import Flask, send_file, request, render_template, jsonify, redirect
+from flask import Flask, send_file, request, render_template, jsonify, redirect, make_response
 import os
-import uuid
-import time
+from urllib.parse import urlencode
 
 app = Flask(__name__)
 
-# In-memory storage for Discord tokens
 store = {}
 
-def store_discord_tokens(user_id, tokens):
-    """Store Discord tokens for a user."""
-    store[f"discord-{user_id}"] = tokens
-
-def get_discord_tokens(user_id):
-    """Retrieve Discord tokens for a user."""
-    return store.get(f"discord-{user_id}")
-
-def get_access_token(user_id, tokens):
-    """Get a fresh access token using the refresh token if needed."""
-    if tokens['expires_at'] < int(time.time()):
-        token_url = 'https://discord.com/api/v10/oauth2/token'
-        body = {
-            'client_id': os.getenv("DISCORD_CLIENT_ID"),
-            'client_secret': os.getenv("DISCORD_CLIENT_SECRET"),
-            'grant_type': 'refresh_token',
-            'refresh_token': tokens['refresh_token']
-        }
-
-        response = requests.post(token_url, data=body)
-        if response.ok:
-            new_tokens = response.json()
-            new_tokens['expires_at'] = int(time.time()) + new_tokens['expires_in']
-            store_discord_tokens(user_id, new_tokens)
-            return new_tokens['access_token']
-        else:
-            raise Exception(f"Error refreshing access token: [{response.status_code}] {response.text}")
-
-    return tokens['access_token']
+DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
 
 @app.route("/")
 def index():
-    return render_template('index.html')
-
-@app.route('/api/oauth')
-def oauth():
-    discord_oauth_url = (
-        "https://discord.com/api/oauth2/authorize"
-        f"?client_id={os.getenv('DISCORD_CLIENT_ID')}"
-        "&redirect_uri=" + os.getenv('REDIRECT_URI') +
-        "&response_type=code&scope=identify%20role_connections.write"
+    return render_template('index.html') 
+    
+@app.route('/linked-role')
+def linked_role():
+    state = os.urandom(16).hex()
+    url = (
+        "https://discord.com/api/oauth2/authorize?"
+        + urlencode({
+            "client_id": DISCORD_CLIENT_ID,
+            "redirect_uri": REDIRECT_URI,
+            "response_type": "code",
+            "scope": "identify role_connections.write",
+            "state": state,
+        })
     )
-    return redirect(discord_oauth_url)
+    
+    resp = make_response(redirect(url))
+    resp.set_cookie('clientState', state, max_age=300)
+    return resp
 
-@app.route('/api/callback')
-def callback():
-    code = request.args.get('code')
+@app.route('/discord-oauth-callback')
+def discord_oauth_callback():
+    try:
+        code = request.args.get('code')
+        discord_state = request.args.get('state')
+        client_state = request.cookies.get('clientState')
+
+        if client_state != discord_state:
+            return 'State verification failed.', 403
+
+        tokens = get_oauth_tokens(code)
+        user_data = get_user_data(tokens)
+        user_id = user_data['id']
+
+        store[user_id] = {
+            "access_token": tokens['access_token'],
+            "refresh_token": tokens['refresh_token'],
+            "expires_at": tokens['expires_at'],
+        }
+
+        update_metadata(user_id)
+
+        return 'Woohoo! Welcome to the club, pal :D'
+    except Exception as e:
+        return 'An error occurred.', 500
+
+@app.route('/update-metadata', methods=['POST'])
+def update_metadata_route():
+    user_id = request.json.get('user_id')
+    try:
+        update_metadata(user_id)
+        return '', 204
+    except Exception as e:
+        return 'An error occurred.', 500
+
+def update_metadata(user_id):
+    tokens = store.get(user_id)
+    if not tokens:
+        raise Exception("User not found.")
+
+    metadata = {
+        "cookieseaten": 1483,
+        "allergictonuts": 0,
+        "firstcookiebaked": "2003-12-20",
+    }
+
+    push_metadata(user_id, tokens, metadata)
+
+def get_oauth_tokens(code):
     token_url = "https://discord.com/api/v10/oauth2/token"
     data = {
-        "client_id": os.getenv("DISCORD_CLIENT_ID"),
-        "client_secret": os.getenv("DISCORD_CLIENT_SECRET"),
+        "client_id": DISCORD_CLIENT_ID,
+        "client_secret": DISCORD_CLIENT_SECRET,
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": os.getenv("REDIRECT_URI"),
+        "redirect_uri": REDIRECT_URI,
         "scope": "identify role_connections.write"
     }
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response = requests.post(token_url, data=data, headers=headers)
+    response = requests.post(token_url, data=data)
+    if response.ok:
+        return response.json()
+    raise Exception("Failed to get OAuth tokens.")
 
-    tokens = response.json()
-    tokens['expires_at'] = int(time.time()) + tokens['expires_in']
-    user_id = tokens.get('id')  # Assuming the response contains the user ID
-    store_discord_tokens(user_id, tokens)  # Store tokens
-    return jsonify(tokens)
-
-@app.route('/api/update_metadata', methods=['POST'])
-def update_metadata():
-    user_id = request.json.get('user_id')
-    tokens = get_discord_tokens(user_id)
-    if not tokens:
-        return jsonify({"error": "No tokens found for this user."}), 404
-
-    access_token = get_access_token(user_id, tokens)
-    metadata = {
-        "account_verified": True,
-        "minimum_score": 1000
+def get_user_data(tokens):
+    user_url = "https://discord.com/api/v10/users/@me"
+    headers = {
+        "Authorization": f"Bearer {tokens['access_token']}"
     }
+    response = requests.get(user_url, headers=headers)
+    if response.ok:
+        return response.json()
+    raise Exception("Failed to fetch user data.")
+
+def push_metadata(user_id, tokens, metadata):
     url = f"https://discord.com/api/v10/users/@me/applications/{os.getenv('DISCORD_APPLICATION_ID')}/role-connection"
     headers = {
-        "Authorization": f"Bearer {access_token}",
+        "Authorization": f"Bearer {tokens['access_token']}",
         "Content-Type": "application/json",
     }
     response = requests.put(url, headers=headers, json={"metadata": metadata})
-    return jsonify(response.json())
-
-@app.route('/api/linked-role', methods=['GET'])
-def linked_role():
-    user_id = request.args.get('user_id')
-    tokens = get_discord_tokens(user_id)
-    if not tokens:
-        return jsonify({"error": "No tokens found for this user."}), 404
-
-    access_token = get_access_token(user_id, tokens)
-    url = f"https://discord.com/api/v10/users/@me/applications/{os.getenv('DISCORD_APPLICATION_ID')}/role-connection"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
-    }
-    
-    response = requests.get(url, headers=headers)
-    
-    if response.ok:
-        return jsonify(response.json())
-    else:
-        return jsonify({"error": f"Error retrieving linked roles: [{response.status_code}] {response.text}"}), response.status_code
+    if not response.ok:
+        raise Exception("Failed to push metadata.")
 
 @app.route('/welcome')
 def generate_welcome_image():
