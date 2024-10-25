@@ -61,8 +61,7 @@ def discord_oauth_callback():
     })
 
     update_metadata(user_id)
-
-    return 'You did it! Now go back to Discord.'
+    return render_template('index.html')
 
 @app.route('/update-metadata', methods=['POST'])
 def update_metadata_route():
