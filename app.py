@@ -79,6 +79,7 @@ def get_oauth_tokens(code):
     }
     response = requests.post(url, data=body)
     response.raise_for_status()
+    print("OAuth token response:", response.json())  
     return response.json()
 
 def get_user_data(access_token):
