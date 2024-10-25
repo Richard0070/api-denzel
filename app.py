@@ -15,8 +15,8 @@ REDIRECT_URI = os.getenv("REDIRECT_URI")
 
 @app.route("/")
 def index():
-    return render_template('index.html') 
-    
+    return render_template('index.html')
+
 @app.route('/linked-role')
 def linked_role():
     state = os.urandom(16).hex()
@@ -42,6 +42,9 @@ def discord_oauth_callback():
         discord_state = request.args.get('state')
         client_state = request.cookies.get('clientState')
 
+        if not code:
+            return 'Authorization code is missing.', 400
+
         if client_state != discord_state:
             return 'State verification failed.', 403
 
@@ -59,7 +62,7 @@ def discord_oauth_callback():
 
         return 'Woohoo! Welcome to the club, pal :D'
     except Exception as e:
-        return f'An error occurred. {e}', 500
+        return f'An error occurred. {str(e)}', 500
 
 @app.route('/update-metadata', methods=['POST'])
 def update_metadata_route():
@@ -68,7 +71,7 @@ def update_metadata_route():
         update_metadata(user_id)
         return '', 204
     except Exception as e:
-        return 'An error occurred.', 500
+        return f'An error occurred: {str(e)}', 500
 
 def update_metadata(user_id):
     tokens = store.get(user_id)
@@ -91,11 +94,10 @@ def get_oauth_tokens(code):
         "grant_type": "authorization_code",
         "code": code,
         "redirect_uri": REDIRECT_URI,
-        "scope": "identify role_connections.write"
     }
     response = requests.post(token_url, data=data)
     if response.ok:
-        return response.json()    
+        return response.json()
     raise Exception(f"Failed to get OAuth tokens. {response.status_code} - {response.text} | {code} | {data}")
 
 def get_user_data(tokens):
@@ -106,7 +108,7 @@ def get_user_data(tokens):
     response = requests.get(user_url, headers=headers)
     if response.ok:
         return response.json()
-    raise Exception("Failed to fetch user data.")
+    raise Exception(f"Failed to fetch user data. {response.status_code} - {response.text}")
 
 def push_metadata(user_id, tokens, metadata):
     url = f"https://discord.com/api/v10/users/@me/applications/{os.getenv('DISCORD_APPLICATION_ID')}/role-connection"
@@ -116,13 +118,17 @@ def push_metadata(user_id, tokens, metadata):
     }
     response = requests.put(url, headers=headers, json={"metadata": metadata})
     if not response.ok:
-        raise Exception("Failed to push metadata.")
+        raise Exception(f"Failed to push metadata. {response.status_code} - {response.text}")
 
 @app.route('/welcome')
 def generate_welcome_image():
     username = request.args.get('username')
     displayname = request.args.get('displayname')
     avatar = request.args.get('avatar')
+
+    if not all([username, displayname, avatar]):
+        return 'Missing user information.', 400
+
     avatar_image = Image.open(requests.get(avatar, stream=True).raw).convert("RGBA").resize((160, 160))
 
     base_image = Image.open("assets/cards/welcome_card_base.png")
