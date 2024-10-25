@@ -59,7 +59,7 @@ def discord_oauth_callback():
         'refresh_token': tokens['refresh_token'],
         'expires_in': tokens['expires_in']
     })
-
+    update_metadata(user_id)
     return render_template('index.html')
 
 def get_oauth_tokens(code):
@@ -104,7 +104,34 @@ def get_access_token(user_id, tokens):
         store_discord_tokens(user_id, new_tokens)
         return new_tokens['access_token']
     return tokens['access_token']
+    
+def update_metadata(user_id):
+    tokens = get_discord_tokens(user_id)
+    if not tokens:
+        return
 
+    metadata = {
+        'is_heisenberg': true
+    }
+
+    push_metadata(user_id, tokens, metadata)
+
+def push_metadata(user_id, tokens, metadata):
+    url = f"https://discord.com/api/v10/users/@me/applications/{DISCORD_CLIENT_ID}/role-connection"
+    access_token = get_access_token(user_id, tokens)
+    
+    body = {
+        'platform_name': 'Melody Realm',
+        'metadata': metadata,
+    }
+    
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json',
+    }
+    response = requests.put(url, headers=headers, json=body)
+    response.raise_for_status()
+    
 @app.route('/welcome')
 def generate_welcome_image():
     username = request.args.get('username')
