@@ -114,7 +114,7 @@ def update_metadata(user_id):
         'is_cool': 1,      
         'is_sexy': 1,              
         'is_troller': 1,    
-        'is_moye': 1
+        'is_cutie': 1
     }
 
     push_metadata(user_id, tokens, metadata)
