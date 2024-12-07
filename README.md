@@ -5,7 +5,7 @@
 ## Endpoints
 
 1. ``` /welcome?username=&displayname=&avatar= ```
-
+2. ``` /linked-role ```
 <br>
 
 > [!IMPORTANT] 
